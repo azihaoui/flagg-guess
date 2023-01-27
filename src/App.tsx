@@ -1,34 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import type { Country } from "./types/Country";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [countries, setCountires] = useState<Country[]>([]);
+  const [country, setCountry] = useState<Country | null>(null);
+  const [input, setInput] = useState("");
+  const [isWinner, setIsWinner] = useState(false);
+
+  useEffect(() => {
+    async function getCountires() {
+      const res = await fetch("https://restcountries.com/v3.1/all");
+      const data = await res.json();
+      console.log(data);
+
+      setCountires(data);
+    }
+    getCountires();
+  }, []);
+
+  function getRandomCountry() {
+    const maxLength = countries.length;
+    const randomIndex = Math.floor(Math.random() * maxLength);
+    setCountry(countries[randomIndex]);
+  }
+
+  function guessCountry() {
+    if (input.toLowerCase() === country?.name.common.toLowerCase()) {
+      getRandomCountry();
+      setInput("");
+      setIsWinner(true);
+    } else {
+      setIsWinner(false);
+    }
+  }
 
   return (
     <div className="App">
+      {country && <img src={country.flags.png} />}
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <input
+          type="text"
+          placeholder="Guess country..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+
+        <button onClick={() => guessCountry()}>Guess country</button>
+        <p>{isWinner ? "wow du är smart" : "oj, du är dum"}</p>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <button onClick={() => getRandomCountry()}>New country</button>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
